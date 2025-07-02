@@ -5,6 +5,9 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 from countdown import get_countdown_string
+from dotenv import load_dotenv
+
+load_dotenv()
 
 HUGGINGFACE_API_KEY = os.environ["HUGGINGFACE_API_KEY"]
 HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
