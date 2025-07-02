@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime, timedelta
-from src.webapp import get_countdown_string
+from src.countdown import get_countdown_string
 
 class TestCountdownString(unittest.TestCase):
     def test_future_date(self):
