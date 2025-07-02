@@ -1,10 +1,27 @@
+import os
+import requests
 from flask import Flask, request, render_template, send_file
 from datetime import datetime
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
-from src.countdown import get_countdown_string
+from countdown import get_countdown_string
 
-app = Flask(__name__, template_folder="src/templates", static_folder="src/static")
+HUGGINGFACE_API_KEY = os.environ["HUGGINGFACE_API_KEY"]
+HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+
+def generate_hf_background(prompt):
+    headers = {
+        "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {"inputs": prompt}
+    response = requests.post(HUGGINGFACE_API_URL, headers=headers, json=data)
+    response.raise_for_status()
+    return Image.open(BytesIO(response.content)).convert("RGBA")
+
+app = Flask(__name__,
+    template_folder=os.path.join(os.path.dirname(__file__), "templates"),
+    static_folder=os.path.join(os.path.dirname(__file__), "static"))
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -25,17 +42,23 @@ def countdown_image():
     occasion = request.args.get('occasion', '')
     target_dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
     countdown = get_countdown_string(target_dt)
-    # Create image
-    img = Image.new('RGB', (500, 200), color=(73, 109, 137))
-    d = ImageDraw.Draw(img)
+    # Generate Hugging Face background
+    try:
+        bg_img = generate_hf_background(f"background for {occasion}").resize((500, 200))
+    except Exception as e:
+        print(f"Hugging Face background generation failed: {e}")
+        bg_img = Image.new('RGBA', (500, 200), color=(73, 109, 137, 255))
+    img = Image.new('RGBA', (500, 200))
+    img.paste(bg_img, (0, 0))
+    draw = ImageDraw.Draw(img)
     try:
         font = ImageFont.truetype("arial.ttf", 24)
-    except:
+    except Exception:
         font = ImageFont.load_default()
-    d.text((10, 40), f"Countdown to {occasion}", fill=(255,255,255), font=font)
-    d.text((10, 100), countdown, fill=(255,255,0), font=font)
+    draw.text((10, 40), f"Countdown to {occasion}", fill=(255,255,255,255), font=font)
+    draw.text((10, 100), countdown, fill=(255,255,0,255), font=font)
     buf = BytesIO()
-    img.save(buf, format='PNG')
+    img.convert('RGB').save(buf, format='PNG')
     buf.seek(0)
     return send_file(buf, mimetype='image/png')
 
