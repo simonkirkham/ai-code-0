@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Countdown Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Countdown Image Generator</h1>
+        <form method="post">
+            <label for="occasion">Occasion:</label>
+            <input type="text" id="occasion" name="occasion" required>
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required>
+            <label for="time">Time:</label>
+            <input type="time" id="time" name="time" required>
+            <input type="submit" value="Create Countdown Image">
+        </form>
+        {% if image_url %}
+        <div class="countdown-section">
+            <h2>Countdown to {{ occasion }}</h2>
+            <img src="{{ image_url }}" alt="Countdown Image">
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
